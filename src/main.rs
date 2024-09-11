@@ -17,27 +17,27 @@ pub extern "C" fn _start() -> ! {
     blog_os::init();
 
     // x86_64::instructions::interrupts::int3();
-    fn stack_overflow(){
-        stack_overflow();
-    }
-    stack_overflow();
 
-    unsafe {
-        *(0xdeadbeef as *mut u8) = 42;
-    }
+    // unsafe {
+    //     *(0xdeadbeef as *mut u8) = 42;
+    // }
 
     #[cfg(test)]
     test_main();
 
     println!("It did not crash!");
-    loop {}
+    blog_os::hlt_loop();
+    // loop {
+    //     blog_os::print!("-");
+    // }
 }
 
 #[cfg(not(test))]
 #[panic_handler]
 fn panic(info: &PanicInfo) -> ! {
     println!("{}", info);
-    loop {}
+    blog_os::hlt_loop();
+    // loop {}
 }
 #[cfg(test)]
 #[panic_handler]
