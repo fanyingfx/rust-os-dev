@@ -5,21 +5,22 @@
 #![test_runner(crate::test_runner)]
 #![reexport_test_harness_main = "test_main"]
 
+pub mod gdt;
 pub mod interrupts;
+pub mod memory;
 pub mod serial;
 pub mod vga_buffer;
-pub mod gdt;
 
 use core::panic::PanicInfo;
 
 pub fn init() {
     gdt::init();
     interrupts::init_idt();
-    unsafe {interrupts::PICS.lock().initialize()};
+    unsafe { interrupts::PICS.lock().initialize() };
     x86_64::instructions::interrupts::enable();
 }
-pub fn hlt_loop() -> !{
-    loop{
+pub fn hlt_loop() -> ! {
+    loop {
         x86_64::instructions::hlt();
     }
 }
@@ -54,11 +55,17 @@ pub fn test_panic_handler(info: &PanicInfo) -> ! {
     hlt_loop();
     // loop {}
 }
+#[cfg(test)]
+use bootloader::entry_point;
+use bootloader::BootInfo;
+
+#[cfg(test)]
+entry_point!(test_kernel_main);
 
 /// Entry point for `cargo test`
+
 #[cfg(test)]
-#[no_mangle]
-pub extern "C" fn _start() -> ! {
+fn test_kernel_main(_boot_info: &'static BootInfo) -> ! {
     init();
     test_main();
     hlt_loop();
@@ -85,8 +92,7 @@ pub fn exit_qemu(exit_code: QemuExitCode) {
     }
 }
 
-
 #[test_case]
-fn test_breakpoint_exception(){
+fn test_breakpoint_exception() {
     x86_64::instructions::interrupts::int3();
 }
