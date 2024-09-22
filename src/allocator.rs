@@ -1,5 +1,8 @@
 use alloc::alloc::{GlobalAlloc, Layout};
+use bump::BumpAllocator;
 use core::ptr::null_mut;
+
+pub mod bump;
 
 use x86_64::{
     structures::paging::{
@@ -8,9 +11,10 @@ use x86_64::{
     VirtAddr,
 };
 
-use linked_list_allocator::LockedHeap;
+// use linked_list_allocator::LockedHeap;
 #[global_allocator]
-static ALLOCATOR: LockedHeap = LockedHeap::empty();
+static ALLOCATOR: Locked<BumpAllocator> = Locked::new(BumpAllocator::new());
+// static ALLOCATOR: LockedHeap = LockedHeap::empty();
 
 pub fn init_heap(
     mapper: &mut impl Mapper<Size4KiB>,
@@ -46,5 +50,30 @@ unsafe impl GlobalAlloc for Dummy {
 
     unsafe fn dealloc(&self, ptr: *mut u8, layout: Layout) {
         panic!("dealloc should be never called")
+    }
+}
+
+// spin::Mutex wrapper
+pub struct Locked<A> {
+    inner: spin::Mutex<A>,
+}
+
+impl<A> Locked<A> {
+    pub const fn new(inner: A) -> Self {
+        Locked {
+            inner: spin::Mutex::new(inner),
+        }
+    }
+
+    pub fn lock(&self) -> spin::MutexGuard<A> {
+        self.inner.lock()
+    }
+}
+fn align_up(addr: usize, align: usize) -> usize {
+    let remainder = addr % align;
+    if remainder == 0 {
+        addr
+    } else {
+        addr - remainder + align
     }
 }
