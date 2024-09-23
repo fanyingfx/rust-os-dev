@@ -1,10 +1,12 @@
 use alloc::alloc::{GlobalAlloc, Layout};
 use bump::BumpAllocator;
+use fixed_size_block::FixedSizeBlockAllocator;
 use linked_list::LinkedListAllocator;
 use core::ptr::null_mut;
 
 pub mod bump;
 pub mod linked_list;
+pub mod fixed_size_block;
 
 use x86_64::{
     structures::paging::{
@@ -15,7 +17,7 @@ use x86_64::{
 
 // use linked_list_allocator::LockedHeap;
 #[global_allocator]
-static ALLOCATOR: Locked<LinkedListAllocator> = Locked::new(LinkedListAllocator::new());
+static ALLOCATOR: Locked<FixedSizeBlockAllocator> = Locked::new(FixedSizeBlockAllocator::new());
 // static ALLOCATOR: LockedHeap = LockedHeap::empty();
 
 pub fn init_heap(
