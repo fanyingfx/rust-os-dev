@@ -1,8 +1,10 @@
 use alloc::alloc::{GlobalAlloc, Layout};
 use bump::BumpAllocator;
+use linked_list::LinkedListAllocator;
 use core::ptr::null_mut;
 
 pub mod bump;
+pub mod linked_list;
 
 use x86_64::{
     structures::paging::{
@@ -13,7 +15,7 @@ use x86_64::{
 
 // use linked_list_allocator::LockedHeap;
 #[global_allocator]
-static ALLOCATOR: Locked<BumpAllocator> = Locked::new(BumpAllocator::new());
+static ALLOCATOR: Locked<LinkedListAllocator> = Locked::new(LinkedListAllocator::new());
 // static ALLOCATOR: LockedHeap = LockedHeap::empty();
 
 pub fn init_heap(
